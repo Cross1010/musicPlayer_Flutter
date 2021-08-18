@@ -1,20 +1,86 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import 'package:music_player/src/helpers/helpers.dart';
+import 'package:music_player/src/models/audioplayer_model.dart';
 import 'package:music_player/src/widgets/custom_appbar.dart';
+import 'package:provider/provider.dart';
 
 class MusicPlayerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
-          children: [
-            CustomAppBar(),
-            _ImageDiskRotation(),
-            //Button and Title
-            _TitleButton(),
-          ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => new AudioPlayerModel()),
+      ],
+      child: SafeArea(
+        child: Scaffold(
+          body: Stack(
+            children: [
+              Background(),
+              Column(
+                children: [
+                  CustomAppBar(),
+                  _ImageDiskRotation(),
+                  //Button and Title
+                  _TitleButton(),
+
+                  SizedBox(height: 10),
+                  Expanded(child: ListItems()),
+                ],
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class Background extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Container(
+      width: double.infinity,
+      height: size.height * 0.7,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(70),
+            bottomRight: Radius.circular(70),
+          ),
+          color: Colors.red,
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.center,
+            colors: [
+              Color(0xff33333E),
+              Color(0xff201E28),
+            ],
+          )),
+    );
+  }
+}
+
+class ListItems extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final lyrics = getLyrics();
+
+    return Container(
+      child: ListWheelScrollView(
+        physics: BouncingScrollPhysics(),
+        itemExtent: size.height * 0.06,
+        diameterRatio: 2,
+        children: lyrics
+            .map((e) => Text(
+                  e,
+                  style: TextStyle(
+                      fontSize: size.width * 0.05,
+                      color: Colors.white.withOpacity(0.6)),
+                ))
+            .toList(),
       ),
     );
   }
@@ -40,7 +106,29 @@ class _ImageDiskRotation extends StatelessWidget {
   }
 }
 
-class _TitleButton extends StatelessWidget {
+class _TitleButton extends StatefulWidget {
+  @override
+  __TitleButtonState createState() => __TitleButtonState();
+}
+
+class __TitleButtonState extends State<_TitleButton>
+    with SingleTickerProviderStateMixin {
+  bool isPlaying = false;
+  AnimationController? playAnimation;
+
+  @override
+  void initState() {
+    playAnimation =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    playAnimation!.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -70,13 +158,27 @@ class _TitleButton extends StatelessWidget {
           Spacer(),
           FloatingActionButton(
             backgroundColor: Color(0xffF8CB51),
-            child: FaIcon(
-              FontAwesomeIcons.play,
-              color: Colors.black,
+            child: AnimatedIcon(
+              icon: AnimatedIcons.play_pause,
+              progress: playAnimation!,
             ),
             elevation: 0,
             highlightElevation: 0,
-            onPressed: () {},
+            onPressed: () {
+              final audioPlayerModel =
+                  Provider.of<AudioPlayerModel>(context, listen: false);
+
+              print(this.isPlaying);
+              if (this.isPlaying) {
+                this.isPlaying = false;
+                playAnimation!.reverse();
+                audioPlayerModel.controller.stop();
+              } else {
+                playAnimation!.forward();
+                this.isPlaying = true;
+                audioPlayerModel.controller.repeat();
+              }
+            },
           )
         ],
       ),
@@ -125,6 +227,8 @@ class _ProgressBar extends StatelessWidget {
 class _ImageDisk extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final audioPlayerModel = Provider.of<AudioPlayerModel>(context);
+
     return Container(
       padding: EdgeInsets.all(20),
       height: 250,
@@ -134,7 +238,14 @@ class _ImageDisk extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Image(image: AssetImage('assets/aurora.jpg')),
+            SpinPerfect(
+              animate: true,
+              controller: (animation) =>
+                  audioPlayerModel.controller = animation,
+              duration: Duration(seconds: 10),
+              infinite: true,
+              child: Image(image: AssetImage('assets/aurora.jpg')),
+            ),
             Container(
               width: 40,
               height: 40,
