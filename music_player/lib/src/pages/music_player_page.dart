@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 
 import 'package:music_player/src/helpers/helpers.dart';
@@ -114,7 +115,11 @@ class _TitleButton extends StatefulWidget {
 class __TitleButtonState extends State<_TitleButton>
     with SingleTickerProviderStateMixin {
   bool isPlaying = false;
+  bool firstTime = true;
+
   AnimationController? playAnimation;
+
+  final assetAudioPlayer = new AssetsAudioPlayer();
 
   @override
   void initState() {
@@ -127,6 +132,21 @@ class __TitleButtonState extends State<_TitleButton>
   void dispose() {
     playAnimation!.dispose();
     super.dispose();
+  }
+
+  void open() {
+    final audioPlayerModel =
+        Provider.of<AudioPlayerModel>(context, listen: false);
+
+    assetAudioPlayer.open(Audio('Breaking-Benjamin-Far-Away.mp3'));
+
+    assetAudioPlayer.currentPosition.listen((duration) {
+      audioPlayerModel.current = duration;
+    });
+
+    assetAudioPlayer.current.listen((playingAudio) {
+      audioPlayerModel.songDuration = playingAudio!.audio.duration;
+    });
   }
 
   @override
@@ -169,6 +189,7 @@ class __TitleButtonState extends State<_TitleButton>
                   Provider.of<AudioPlayerModel>(context, listen: false);
 
               print(this.isPlaying);
+
               if (this.isPlaying) {
                 this.isPlaying = false;
                 playAnimation!.reverse();
@@ -177,6 +198,13 @@ class __TitleButtonState extends State<_TitleButton>
                 playAnimation!.forward();
                 this.isPlaying = true;
                 audioPlayerModel.controller.repeat();
+              }
+
+              if (firstTime) {
+                this.open();
+                firstTime = false;
+              } else {
+                assetAudioPlayer.playOrPause();
               }
             },
           )
@@ -194,10 +222,13 @@ class _ProgressBar extends StatelessWidget {
     final textStyle = TextStyle(
         color: Colors.white.withOpacity(0.4), fontSize: size.width * 0.07);
 
+    final audioPlayerModel = Provider.of<AudioPlayerModel>(context);
+    final porcent = audioPlayerModel.porcent;
+
     return Container(
       child: Column(
         children: [
-          Text('00:00', style: textStyle),
+          Text('${audioPlayerModel.songTotalDuration}', style: textStyle),
           SizedBox(height: 10),
           Stack(
             children: [
@@ -210,14 +241,14 @@ class _ProgressBar extends StatelessWidget {
                 bottom: 0,
                 child: Container(
                   width: 3,
-                  height: 100,
+                  height: 200 * porcent,
                   color: Colors.white.withOpacity(0.8),
                 ),
               ),
             ],
           ),
           SizedBox(height: 10),
-          Text('00:00', style: textStyle),
+          Text('${audioPlayerModel.currentSecond}', style: textStyle),
         ],
       ),
     );
