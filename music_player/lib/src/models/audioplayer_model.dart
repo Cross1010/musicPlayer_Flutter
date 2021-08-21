@@ -13,14 +13,14 @@ class AudioPlayerModel with ChangeNotifier {
       ? this._current.inSeconds / this._songDuration.inSeconds
       : 0;
 
-  AnimationController? _controller;
-  AnimationController get controller => this.controller;
+  AnimationController? controller;
+  AnimationController get controllerS => this.controller!;
   bool get playing => this._playing;
   Duration get songDuration => this._songDuration;
   Duration get current => this._current;
 
-  set controller(AnimationController vaule) {
-    this._controller = vaule;
+  set controllerS(AnimationController vaule) {
+    this.controller = vaule;
   }
 
   set playing(bool vaule) {

@@ -24,7 +24,7 @@ class MusicPlayerPage extends StatelessWidget {
                   CustomAppBar(),
                   _ImageDiskRotation(),
                   //Button and Title
-                  _TitleButton(),
+                  TitleButton(),
 
                   SizedBox(height: 10),
                   Expanded(child: ListItems()),
@@ -107,12 +107,12 @@ class _ImageDiskRotation extends StatelessWidget {
   }
 }
 
-class _TitleButton extends StatefulWidget {
+class TitleButton extends StatefulWidget {
   @override
-  __TitleButtonState createState() => __TitleButtonState();
+  _TitleButtonState createState() => _TitleButtonState();
 }
 
-class __TitleButtonState extends State<_TitleButton>
+class _TitleButtonState extends State<TitleButton>
     with SingleTickerProviderStateMixin {
   bool isPlaying = false;
   bool firstTime = true;
@@ -144,9 +144,11 @@ class __TitleButtonState extends State<_TitleButton>
       audioPlayerModel.current = duration;
     });
 
-    assetAudioPlayer.current.listen((playingAudio) {
-      audioPlayerModel.songDuration = playingAudio!.audio.duration;
-    });
+    // assetAudioPlayer.current.listen((playingAudio) {
+    //   if (playingAudio != null) {
+    //     audioPlayerModel.songDuration = playingAudio.audio.duration;
+    //   }
+    // });
   }
 
   @override
@@ -193,11 +195,11 @@ class __TitleButtonState extends State<_TitleButton>
               if (this.isPlaying) {
                 this.isPlaying = false;
                 playAnimation!.reverse();
-                audioPlayerModel.controller.stop();
+                audioPlayerModel.controller!.stop();
               } else {
                 playAnimation!.forward();
                 this.isPlaying = true;
-                audioPlayerModel.controller.repeat();
+                audioPlayerModel.controller!.repeat();
               }
 
               if (firstTime) {
@@ -270,7 +272,7 @@ class _ImageDisk extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             SpinPerfect(
-              animate: true,
+              animate: false,
               controller: (animation) =>
                   audioPlayerModel.controller = animation,
               duration: Duration(seconds: 10),
